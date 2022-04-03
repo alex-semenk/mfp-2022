@@ -1,0 +1,4 @@
+rootProject.name = 'mfp-2022'
+include 'resource-service'
+include 'song-service'
+include 'resource-processor'
