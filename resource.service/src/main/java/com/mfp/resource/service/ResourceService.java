@@ -5,33 +5,38 @@ import org.springframework.core.io.InputStreamSource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ResourceService {
 
-    private static class ResourceIdSequence {
-        private static long nextId = 1;
-
-        public static long nextId() {
-            return nextId++;
-        }
-    }
-
     @Autowired
     private ResourceRepository resourceRepository;
+    
+    @Autowired
+    private ResourceStorage resourceStorage;
 
-    public Long uploadResource(InputStreamSource source) {
-        Long resourceId = ResourceIdSequence.nextId();
-        resourceRepository.uploadResource(resourceId, source);
-        return resourceId;
+    @Autowired
+    private ResourceTopic resourceTopic;
+
+    public Resource uploadResource(InputStreamSource source) {
+        Resource resource = new Resource();
+        resource.setLocation(UUID.randomUUID());
+        resourceRepository.save(resource);
+        resourceStorage.uploadResource(resource.getLocation().toString(), source);
+        resourceTopic.sendMessage(resource.getId());
+        return resource;
     }
 
-    public byte[] getResourceById(Long resourceId) {
-        return resourceRepository.getResourceData(resourceId);
+    public byte[] getResourceDataById(Long resourceId) {
+        Resource resource = resourceRepository.findById(resourceId).orElse(null);
+        return resourceStorage.getResourceData(resource.getLocation().toString());
     }
 
     public void deleteResourcesByIds(List<Long> resourceIds) {
-        resourceRepository.deleteResources(resourceIds);
+        List<String> keys = resourceRepository.findAllById(resourceIds).stream().map(Resource::getLocation).map(UUID::toString).toList();
+        resourceStorage.deleteResources(keys);
+        resourceRepository.deleteAllById(resourceIds);
     }
 
 }
