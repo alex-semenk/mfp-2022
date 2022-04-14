@@ -18,13 +18,13 @@ public class ResourceController {
         if (!"audio/mpeg".equals(contentType)) {
             throw new RuntimeException("Invalid file content type: " + contentType);
         }
-        Long resourceId = resourceService.uploadResource(file);
-        return new ResourceId(resourceId);
+        Resource resource = resourceService.uploadResource(file);
+        return new ResourceId(resource.getId());
     }
 
     @GetMapping(value = "/resources/{id}", produces = "audio/mpeg")
     public byte[] getResourceById(@PathVariable("id") Long resourceId) {
-        return resourceService.getResourceById(resourceId);
+        return resourceService.getResourceDataById(resourceId);
     }
 
     @DeleteMapping("/resources")

@@ -7,11 +7,13 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.mp3.Mp3Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.springframework.core.io.InputStreamSource;
+import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+@Service
 public class ResourceProcessorService {
 
     public SongMetadata readSongMetadata(InputStreamSource source) {
