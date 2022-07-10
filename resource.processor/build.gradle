@@ -2,35 +2,89 @@ plugins {
 	id 'org.springframework.boot' version '2.6.6'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'au.com.dius.pact' version '4.3.10'
 }
 
 group = 'com.mfp'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 sourceCompatibility = '17'
+
+pact {
+	publish {
+		pactBrokerUrl = 'http://localhost:9292'
+	}
+}
 
 repositories {
 	mavenCentral()
 }
 
+testing {
+	suites {
+		test {
+			useJUnitJupiter()
+			dependencies {
+				implementation 'org.springframework.boot:spring-boot-starter-test'
+				implementation 'org.mockito:mockito-core:4.5.1'
+				implementation 'net.bytebuddy:byte-buddy:1.12.9'
+			}
+		}
+
+		testIntegration(JvmTestSuite) {
+			dependencies {
+				implementation project
+				implementation 'org.springframework.boot:spring-boot-starter-test'
+				implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+				implementation 'org.springframework.kafka:spring-kafka-test'
+			}
+
+			targets {
+				all {
+					testTask.configure {
+						shouldRunAfter(test)
+					}
+				}
+			}
+		}
+
+		testContract(JvmTestSuite) {
+			dependencies {
+				implementation project
+				implementation 'org.springframework.boot:spring-boot-starter-test'
+				implementation 'org.assertj:assertj-core:3.23.1'
+				implementation 'au.com.dius:pact-jvm-consumer-junit5:4.0.10'
+				implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+			}
+			targets {
+				all {
+					testTask.configure {
+						shouldRunAfter(testIntegration)
+					}
+				}
+			}
+		}
+	}
+}
+
+tasks.named('check') {
+	dependsOn(testing.suites.testIntegration)
+	dependsOn(testing.suites.testContract)
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 	implementation 'org.springframework.retry:spring-retry'
 
 	implementation 'org.springframework.kafka:spring-kafka'
-	testImplementation 'org.springframework.kafka:spring-kafka-test'
 
-	implementation 'org.apache.tika:tika-core:2.3.0'
-	implementation 'org.apache.tika:tika-parser-audiovideo-module:2.3.0'
+	implementation "org.apache.tika:tika-core:${apacheTikaVersion}"
+	implementation "org.apache.tika:tika-parser-audiovideo-module:${apacheTikaVersion}"
 
-	compileOnly 'org.projectlombok:lombok:1.18.22'
-	annotationProcessor 'org.projectlombok:lombok:1.18.22'
-
-	testCompileOnly 'org.projectlombok:lombok:1.18.22'
-	testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+	compileOnly "org.projectlombok:lombok:${lombokVersion}"
+	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 }
 
 dependencyManagement {

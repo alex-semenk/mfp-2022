@@ -1,23 +1,37 @@
 version: '3'
 
 services:
-#  postgres:
-#    container_name: song-postgres
-#    image: postgres
-#    ports:
-#      - '5432:5432'
-#    environment:
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: postgres
-#      POSTGRES_DB: songs
 
-  zookeeper:
-    container_name: zookeeper
-    image: 'bitnami/zookeeper:latest'
+#  postgres:
+#    container_name: postgres-song-db
+#    image: postgres:11.3
+#    restart: always
+#    environment:
+#      POSTGRES_USER: root
+#      POSTGRES_PASSWORD: root
+#      POSTGRES_DB: songs
+#    ports:
+#      - '54322:5432'
+#    volumes:
+#      - ./infra/psql_init_scripts:/docker-entrypoint-initdb.d/
+
+  localstack:
+    container_name: localstack
+    image: localstack/localstack
+    network_mode: bridge
     ports:
-      - '2181:2181'
+      - '127.0.0.1:4510-4559:4510-4559'  # external service port range
+      - '127.0.0.1:4566:4566'            # LocalStack Edge Proxy
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      # - DEBUG=${DEBUG-}
+      # - DATA_DIR=${DATA_DIR-}
+      # - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR-}
+      # - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
+      # - DOCKER_HOST=unix:///var/run/docker.sock
+      - SERVICES=s3
+    # volumes:
+      # - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
+      # - "/var/run/docker.sock:/var/run/docker.sock"
 
   kafka:
     container_name: kafka
@@ -35,16 +49,45 @@ services:
     depends_on:
       - zookeeper
 
+  zookeeper:
+    container_name: zookeeper
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
   kafka-ui:
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
     ports:
-      - 8101:8101
-    depends_on:
-      - zookeeper
-      - kafka
+      - '8101:8101'
     environment:
       SERVER_PORT: 8101
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    depends_on:
+      - zookeeper
+      - kafka
+
+  pact-broker:
+    container_name: pact-broker
+    image: pactfoundation/pact-broker:2.101.0.1
+    ports:
+      - '9292:9292'
+    environment:
+      PACT_BROKER_PORT: '9292'
+      PACT_BROKER_DATABASE_URL: 'postgres://pact:pass@pact-broker.postgres/pact_broker'
+      PACT_BROKER_LOG_LEVEL: DEBUG
+      PACT_BROKER_SQL_LOG_LEVEL: DEBUG
+    depends_on:
+      - pact-broker-postgres
+
+  pact-broker-postgres:
+    container_name: pact-broker.postgres
+    image: postgres:14.4
+    environment:
+      POSTGRES_DB: pact_broker
+      POSTGRES_USER: pact
+      POSTGRES_PASSWORD: pass

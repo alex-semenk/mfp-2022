@@ -1,5 +1,8 @@
 package com.mfp.resource.processor;
 
+import static java.util.stream.Collectors.toMap;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.XMPDM;
@@ -10,9 +13,13 @@ import org.springframework.core.io.InputStreamSource;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ResourceProcessorService {
 
@@ -26,41 +33,39 @@ public class ResourceProcessorService {
             throw new ResourceProcessorException("Could not read song metadata", e);
         }
 
-        Map<String, String> attrs = new HashMap<>();
-        for (String name: tikaMetadata.names()) {
-            attrs.put(name, tikaMetadata.get(name));
-        }
-        System.out.println(attrs);
+        log.debug("Song metadata: {}", toString(tikaMetadata));
 
-        SongMetadata songMetadata = new SongMetadata();
-        songMetadata.setName(tikaMetadata.get(DublinCore.TITLE));
-        songMetadata.setArtist(tikaMetadata.get(XMPDM.ARTIST));
-        songMetadata.setAlbum(tikaMetadata.get(XMPDM.ALBUM));
-        songMetadata.setLength(getDuration(tikaMetadata));
-        songMetadata.setYear(getYear(tikaMetadata));
-
-        return songMetadata;
+        return SongMetadata.builder()
+            .name(tikaMetadata.get(DublinCore.TITLE))
+            .artist(tikaMetadata.get(XMPDM.ARTIST))
+            .album(tikaMetadata.get(XMPDM.ALBUM))
+            .length(parseDouble(tikaMetadata.get(XMPDM.DURATION)).map(Math::ceil).map(Double::intValue).orElse(null))
+            .year(parseInteger(tikaMetadata.get(XMPDM.RELEASE_DATE)).orElse(null))
+            .build();
     }
 
-    private Integer getYear(Metadata metadata) {
-        String value = metadata.get(XMPDM.RELEASE_DATE);
+    private String toString(Metadata tikaMetadata) {
+        return Arrays.stream(tikaMetadata.names())
+            .filter(name -> !tikaMetadata.get(name).isBlank())
+            .collect(toMap(name -> name, tikaMetadata::get))
+            .toString();
+    }
+
+    private Optional<Integer> parseInteger(String str) {
         try {
-            return value == null ? null : Integer.parseInt(value);
+            return str == null ? Optional.empty() : Optional.of(Integer.parseInt(str));
         } catch (NumberFormatException e) {
-            return null;
+            log.error("Failed to parse Integer", e);
+            return Optional.empty();
         }
     }
 
-
-    private Integer getDuration(Metadata metadata) {
-        String value = metadata.get(XMPDM.DURATION);
-        if (value == null) {
-            return null;
-        }
+    private Optional<Double> parseDouble(String str) {
         try {
-            return (int) Math.ceil(Double.parseDouble(value));
+            return str == null ? Optional.empty() : Optional.of(Double.parseDouble(str));
         } catch (NumberFormatException e) {
-            return null;
+            log.error("Failed to parse Double", e);
+            return Optional.empty();
         }
     }
 

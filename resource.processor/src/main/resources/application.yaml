@@ -1,0 +1,15 @@
+server.port: 8083
+
+kafka.resource.topic.name: resources
+kafka.resource.topic.consumer.group.id: resource-processor
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9093
+    consumer:
+      group-id: resource-processor
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+spring.json.use.type.headers: false

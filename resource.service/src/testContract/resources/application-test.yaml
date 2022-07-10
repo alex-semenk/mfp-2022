@@ -1,0 +1,13 @@
+pactbroker:
+  host: localhost
+  port: 9292
+  tags: latest
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9093
+    consumer:
+      auto-offset-reset: earliest
+      group-id: resource-service-test
+
+test.kafka.consumer.timeout: 1000
