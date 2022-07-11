@@ -1,13 +1,11 @@
 package com.mfp.song.service;
 
-import io.cucumber.spring.CucumberContextConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 
-@CucumberContextConfiguration
-@SpringBootTest
+@ContextConfiguration(classes = { SongServiceSteps.class })
+@ActiveProfiles("test")
+@Import(SongServiceClient.class)
 public class CucumberBootstrap {
-    @Autowired
-    private SongServiceClient songServiceClient;
 }
