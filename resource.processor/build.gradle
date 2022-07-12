@@ -9,14 +9,36 @@ group = 'com.mfp'
 version = '1.0.0'
 sourceCompatibility = '17'
 
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	implementation 'org.springframework.retry:spring-retry'
+
+	implementation 'org.springframework.kafka:spring-kafka'
+
+	implementation "org.apache.tika:tika-core:${apacheTikaVersion}"
+	implementation "org.apache.tika:tika-parser-audiovideo-module:${apacheTikaVersion}"
+
+	compileOnly "org.projectlombok:lombok:${lombokVersion}"
+	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+}
+
+dependencyManagement {
+	imports {
+		mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2021.0.1'
+	}
+}
+
 pact {
 	publish {
 		pactBrokerUrl = 'http://localhost:9292'
 	}
-}
-
-repositories {
-	mavenCentral()
 }
 
 testing {
@@ -69,30 +91,4 @@ testing {
 tasks.named('check') {
 	dependsOn(testing.suites.testIntegration)
 	dependsOn(testing.suites.testContract)
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-
-	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-	implementation 'org.springframework.retry:spring-retry'
-
-	implementation 'org.springframework.kafka:spring-kafka'
-
-	implementation "org.apache.tika:tika-core:${apacheTikaVersion}"
-	implementation "org.apache.tika:tika-parser-audiovideo-module:${apacheTikaVersion}"
-
-	compileOnly "org.projectlombok:lombok:${lombokVersion}"
-	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-}
-
-dependencyManagement {
-	imports {
-		mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2021.0.1'
-	}
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
 }

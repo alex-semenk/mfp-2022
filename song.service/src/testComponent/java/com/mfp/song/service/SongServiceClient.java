@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @TestComponent
-@FeignClient(name = "song", url = "http://localhost:${server.port}/")
+@FeignClient(name = "song.service", url = "http://localhost:${server.port}/")
 public interface SongServiceClient {
     
     @PostMapping(path = "/songs")

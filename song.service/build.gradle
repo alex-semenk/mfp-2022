@@ -5,11 +5,23 @@ plugins {
 }
 
 group = 'com.mfp'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	runtimeOnly 'com.h2database:h2'
+	// runtimeOnly 'org.postgresql:postgresql'
+
+	compileOnly "org.projectlombok:lombok:${lombokVersion}"
+	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 }
 
 testing {
@@ -61,10 +73,7 @@ testing {
 			dependencies {
 				implementation project
 				implementation 'org.junit.platform:junit-platform-suite'
-				implementation 'org.assertj:assertj-core:3.23.1'
-				// implementation "io.cucumber:cucumber-core:${cucumberVersion}"
-				// implementation "io.cucumber:cucumber-jvm:${cucumberVersion}"
-				// implementation "io.cucumber:datatable:${cucumberVersion}"
+				implementation "org.assertj:assertj-core:${assertjVersion}"
 				implementation project.dependencies.platform("io.cucumber:cucumber-bom:${cucumberVersion}")
 				implementation 'io.cucumber:cucumber-java'
 				implementation 'io.cucumber:cucumber-spring'
@@ -73,7 +82,7 @@ testing {
 				implementation 'org.springframework.boot:spring-boot-starter-test'
 				implementation 'org.springframework.boot:spring-boot-starter-web'
 				implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-				implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:3.0.2'
+				implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 				compileOnly "org.projectlombok:lombok:${lombokVersion}"
 				// annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -99,22 +108,12 @@ testing {
 	}
 }
 
+dependencies {
+	testComponentAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}" // !!!!!
+}
+
 tasks.named('check') {
 	dependsOn(testing.suites.testIntegration)
 	dependsOn(testing.suites.testContract)
 	dependsOn(testing.suites.testComponent)
-}
-
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-	runtimeOnly 'com.h2database:h2'
-	// runtimeOnly 'org.postgresql:postgresql'
-
-	compileOnly "org.projectlombok:lombok:${lombokVersion}"
-	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-	testComponentAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}" // !!!!!
 }

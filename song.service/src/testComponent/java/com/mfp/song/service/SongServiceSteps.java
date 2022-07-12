@@ -5,10 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Optional;
 
-import com.mfp.song.service.CucumberBootstrap;
-import com.mfp.song.service.Song;
-import com.mfp.song.service.SongRepository;
-import com.mfp.song.service.SongServiceClient;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterStep;
 import io.cucumber.java.Before;
@@ -18,15 +14,10 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import lombok.extern.slf4j.Slf4j;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 @Slf4j
-public class SongServiceSteps extends CucumberBootstrap {
+public class SongServiceSteps {
 
     private Song songResponse;
 
@@ -38,7 +29,7 @@ public class SongServiceSteps extends CucumberBootstrap {
     @Autowired
     protected SongServiceClient songServiceClient;
 
-    @Before()
+    @Before
     public void beforeScenario() {
         log.info(">>> Before scenario!");
         // songRepository.deleteAll();
@@ -49,7 +40,7 @@ public class SongServiceSteps extends CucumberBootstrap {
         log.info(">>> BeforeStep!");
     }
 
-    @After()
+    @After
     public void afterScenario() {
         log.info(">>> cleaning up after scenario!");
     }

@@ -6,11 +6,29 @@ plugins {
 }
 
 group = 'com.mfp'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.kafka:spring-kafka'
+	// implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+	implementation 'org.springframework.cloud:spring-cloud-aws-dependencies:1.1.0.RELEASE'
+
+	implementation 'com.amazonaws:aws-java-sdk-s3'
+	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.228')
+
+	compileOnly "org.projectlombok:lombok:${lombokVersion}"
+	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+	implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.2'
+	runtimeOnly 'com.h2database:h2'
 }
 
 testing {
@@ -71,23 +89,4 @@ testing {
 tasks.named('check') {
 	dependsOn(testing.suites.testIntegration)
 	dependsOn(testing.suites.testContract)
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.kafka:spring-kafka'
-	// implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
-	implementation 'org.springframework.cloud:spring-cloud-aws-dependencies:1.1.0.RELEASE'
-
-	implementation 'com.amazonaws:aws-java-sdk-s3'
-	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.228')
-
-	compileOnly "org.projectlombok:lombok:${lombokVersion}"
-	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-	implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.2'
-	runtimeOnly 'com.h2database:h2'
-
 }

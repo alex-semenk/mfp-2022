@@ -6,7 +6,7 @@ import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.web.bind.annotation.PostMapping;
 
-@FeignClient(name = "song", url = "http://localhost:8082/")
+@FeignClient(name = "song.service", url = "http://localhost:8082/")
 public interface SongServiceClient {
 
     @PostMapping("/songs")

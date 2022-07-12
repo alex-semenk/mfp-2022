@@ -1,0 +1,50 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.1'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+}
+
+group = 'com.mfp'
+version = '1.0.0'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+            dependencies {
+                implementation project
+                implementation 'org.junit.platform:junit-platform-suite'
+                implementation "org.assertj:assertj-core:${assertjVersion}"
+                implementation project.dependencies.platform("io.cucumber:cucumber-bom:${cucumberVersion}")
+                implementation 'io.cucumber:cucumber-java'
+                implementation 'io.cucumber:cucumber-spring'
+                implementation 'io.cucumber:cucumber-junit-platform-engine'
+                implementation 'org.springframework.boot:spring-boot-starter'
+                implementation 'org.springframework.boot:spring-boot-starter-test'
+                implementation 'org.springframework.boot:spring-boot-starter-web'
+                implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+                implementation "org.awaitility:awaitility:${awaitilityVersion}"
+
+                compileOnly "org.projectlombok:lombok:${lombokVersion}"
+            }
+            dependencyManagement {
+                imports {
+                    mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2021.0.1'
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}" // !!!!!
+}

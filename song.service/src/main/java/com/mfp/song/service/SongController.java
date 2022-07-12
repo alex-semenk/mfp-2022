@@ -32,4 +32,9 @@ public class SongController {
         return new SongIds(songIdsToDelete);
     }
 
+    @GetMapping("/songs")
+    public List<Song> searchSongs(Song searchSong) {
+        return songService.searchSongs(searchSong);
+    }
+
 }
