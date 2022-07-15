@@ -13,7 +13,7 @@ public class ResourceController {
     private ResourceService resourceService;
 
     @PostMapping(value = "/resources")
-    public ResourceId uploadResource(@RequestParam("file") MultipartFile file) {
+    public ResourceId uploadResource(@RequestPart("file") MultipartFile file) {
         String contentType = file.getContentType();
         if (!"audio/mpeg".equals(contentType)) {
             throw new RuntimeException("Invalid file content type: " + contentType);

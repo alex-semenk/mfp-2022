@@ -2,10 +2,11 @@ plugins {
 	id 'org.springframework.boot' version '2.6.6'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'au.com.dius.pact' version '4.3.10'
 }
 
 group = 'com.mfp'
-version = '0.0.1-SNAPSHOT'
+version = '1.0.0'
 sourceCompatibility = '17'
 
 repositories {
@@ -14,28 +15,78 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.kafka:spring-kafka'
-	testImplementation 'org.springframework.kafka:spring-kafka-test'
 	// implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 	implementation 'org.springframework.cloud:spring-cloud-aws-dependencies:1.1.0.RELEASE'
 
 	implementation 'com.amazonaws:aws-java-sdk-s3'
 	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.228')
 
-	compileOnly 'org.projectlombok:lombok:1.18.22'
-	annotationProcessor 'org.projectlombok:lombok:1.18.22'
+	compileOnly "org.projectlombok:lombok:${lombokVersion}"
+	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
-	testCompileOnly 'org.projectlombok:lombok:1.18.22'
-	testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
-
-	implementation "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
+	implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.2'
 	runtimeOnly 'com.h2database:h2'
-
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+testing {
+	suites {
+		test {
+			useJUnitJupiter()
+			dependencies {
+				implementation 'org.springframework.boot:spring-boot-starter-test'
+				implementation 'org.mockito:mockito-core:4.5.1'
+				implementation 'net.bytebuddy:byte-buddy:1.12.9'
+			}
+		}
+
+		testIntegration(JvmTestSuite) {
+			dependencies {
+				implementation project
+				implementation 'org.springframework.boot:spring-boot-starter-test'
+				implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+				implementation 'org.springframework.kafka:spring-kafka'
+				implementation 'org.springframework.kafka:spring-kafka-test'
+				implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.2' // ???
+				implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3' // ???
+			}
+
+			targets {
+				all {
+					testTask.configure {
+						shouldRunAfter(test)
+					}
+				}
+			}
+		}
+
+		testContract(JvmTestSuite) {
+			dependencies {
+				implementation project
+				implementation 'org.springframework.boot:spring-boot-starter-test'
+				implementation 'au.com.dius:pact-jvm-provider-junit5:4.0.10'
+				implementation 'au.com.dius:pact-jvm-provider-junit5-spring:4.0.10'
+				implementation 'org.springframework.boot:spring-boot'
+				implementation 'org.springframework:spring-web:5.3.21'
+				implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+				implementation 'org.springframework.kafka:spring-kafka'
+				implementation 'org.springframework.kafka:spring-kafka-test'
+			}
+			targets {
+				all {
+					testTask.configure {
+						maxHeapSize = '1024m'
+						shouldRunAfter(testIntegration)
+					}
+				}
+			}
+		}
+	}
+}
+
+tasks.named('check') {
+	dependsOn(testing.suites.testIntegration)
+	dependsOn(testing.suites.testContract)
 }

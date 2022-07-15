@@ -1,6 +1,7 @@
 package com.mfp.song.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,18 +10,22 @@ import java.util.List;
 public class SongService {
 
     @Autowired
-    private SongRepository bookRepository;
+    private SongRepository songRepository;
 
     public Song getSongById(Long songId) {
-        return bookRepository.findById(songId).get();
+        return songRepository.findById(songId).get();
     }
 
     public void saveSong(Song song) {
-        bookRepository.save(song);
+        songRepository.save(song);
     }
 
     public void deleteSongsByIds(List<Long> songIdsToDeleted) {
-        bookRepository.deleteAllById(songIdsToDeleted);
+        songRepository.deleteAllById(songIdsToDeleted);
+    }
+
+    public List<Song> searchSongs(Song searchSong) {
+        return songRepository.findAll(Example.of(searchSong));
     }
 
 }
