@@ -1,21 +1,21 @@
 spring:
   jpa:
+    generate-ddl: true
     hibernate.naming.physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    properties:
-      hibernate.hbm2ddl.import_files.sql_extractor: org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor
   jackson.default-property-inclusion: non_null
   h2.console.enabled: true
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:54322}/${POSTGRES_DATABASE:song_service}
+    username: ${POSTGRES_USERNAME:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+
 server:
   port: 8082
   error:
     whitelabel.enabled: false
     include-stacktrace: ALWAYS
     include-message: ALWAYS
-
-#spring.jpa.properties.hibernate.default_schema=songs
-#spring.datasource.url=jdbc:postgresql://${APP_COMMON_PG_WRITE_HOST}:${APP_COMMON_PG_PORT}/${APP_COMMON_PG_DB_NAME}
-#spring.datasource.jdbc-url=${datasource.url}
-#spring.datasource.username=${PG_USER}
-#spring.datasource.password=${PG_PASS}
-#spring.datasource.driver-class-name=org.postgresql.Driver
-#spring.datasource.hikari.maximum-pool-size=10

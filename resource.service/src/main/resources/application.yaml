@@ -6,22 +6,35 @@ cloud:
       static: us-east-1
       auto: false
     credentials:
-      access-key: localstack
-      secret-key: localstack
+      access-key: ${AWS_ACCESS_KEY:localstack}
+      secret-key: ${AWS_SECRET_KEY:localstack}
     stack:
       auto: false
       enabled: false
     s3:
-      endpoint: http://127.0.0.1:4566
+      endpoint: http://${S3_HOST:localhost}:${S3_PORT:4566}
 
 spring:
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+
+  jpa:
+    generate-ddl: true
+
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:54321}/${POSTGRES_DATABASE:resource_service}
+    username: ${POSTGRES_USERNAME:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+
   h2.console.enabled: true
+
   kafka:
-    bootstrap-servers: localhost:9093
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9093}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

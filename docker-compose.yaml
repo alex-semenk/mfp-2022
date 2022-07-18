@@ -2,56 +2,113 @@ version: '3'
 
 services:
 
-#  postgres:
-#    container_name: postgres-song-db
-#    image: postgres:11.3
-#    restart: always
-#    environment:
-#      POSTGRES_USER: root
-#      POSTGRES_PASSWORD: root
-#      POSTGRES_DB: songs
-#    ports:
-#      - '54322:5432'
-#    volumes:
-#      - ./infra/psql_init_scripts:/docker-entrypoint-initdb.d/
+  resource-processor:
+    container_name: resource-processor
+    image: mfp2022/resource.processor
+    build: ./resource.processor
+    environment:
+      KAFKA_HOST: ${KAFKA_CLIENT_HOST}
+      KAFKA_PORT: ${KAFKA_CLIENT_PORT}
+      RESOURCE_SERVICE_URL: http://resource-service:8081/
+      SONG_SERVICE_URL: http://song-service:8082/
+    ports:
+      - '8080:8080'
+    depends_on:
+      - kafka
+
+  resource-service:
+    container_name: resource-service
+    image: mfp2022/resource.service
+    build: ./resource.service
+    environment:
+      POSTGRES_HOST: resource-service.postgres
+      POSTGRES_PORT: ${COMMON_POSTGRES_PORT}
+      POSTGRES_USERNAME: ${COMMON_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${COMMON_POSTGRES_PASSWORD}
+      S3_HOST: localstack
+      S3_PORT: 4566
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY}
+      KAFKA_HOST: ${KAFKA_CLIENT_HOST}
+      KAFKA_PORT: ${KAFKA_CLIENT_PORT}
+    ports:
+      - '8081:8081'
+    depends_on:
+      - resource-service.postgres
+      - localstack
+      - kafka
+
+  song-service:
+    container_name: song-service
+    image: mfp2022/song.service
+    build: ./song.service
+    environment:
+      POSTGRES_HOST: song-service.postgres
+      POSTGRES_PORT: ${COMMON_POSTGRES_PORT}
+      POSTGRES_USERNAME: ${COMMON_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${COMMON_POSTGRES_PASSWORD}
+    ports:
+      - '8082:8082'
+    depends_on:
+      - song-service.postgres
+
+  resource-service.postgres:
+    container_name: resource-service.postgres
+    image: postgres:14.4-alpine3.16
+    environment:
+      POSTGRES_DB: resource_service
+      POSTGRES_USER: ${COMMON_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${COMMON_POSTGRES_PASSWORD}
+    ports:
+      - '54321:${COMMON_POSTGRES_PORT}'
+
+  song-service.postgres:
+    container_name: song-service.postgres
+    image: postgres:14.4-alpine3.16
+    environment:
+      POSTGRES_DB: song_service
+      POSTGRES_USER: ${COMMON_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${COMMON_POSTGRES_PASSWORD}
+    ports:
+      - '54322:${COMMON_POSTGRES_PORT}'
 
   localstack:
     container_name: localstack
     image: localstack/localstack
-    network_mode: bridge
     ports:
-      - '127.0.0.1:4510-4559:4510-4559'  # external service port range
-      - '127.0.0.1:4566:4566'            # LocalStack Edge Proxy
+      - '4510-4559:4510-4559'  # external service port range
+      - '4566:4566'            # LocalStack Edge Proxy
     environment:
+      SERVICES: s3
+      # - HOSTNAME_EXTERNAL=localstack
       # - DEBUG=${DEBUG-}
       # - DATA_DIR=${DATA_DIR-}
       # - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR-}
       # - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
       # - DOCKER_HOST=unix:///var/run/docker.sock
-      - SERVICES=s3
     # volumes:
       # - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
       # - "/var/run/docker.sock:/var/run/docker.sock"
 
   kafka:
     container_name: kafka
-    image: 'bitnami/kafka:latest'
+    image: 'bitnami/kafka'
     ports:
       - '9093:9093'
     environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:9093
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+      KAFKA_BROKER_ID: '1'
+      KAFKA_CFG_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      ALLOW_PLAINTEXT_LISTENER: 'yes'
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: 'CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CFG_LISTENERS: 'CLIENT://:${KAFKA_CLIENT_PORT},EXTERNAL://:9093'
+      KAFKA_CFG_ADVERTISED_LISTENERS: 'CLIENT://${KAFKA_CLIENT_HOST}:${KAFKA_CLIENT_PORT},EXTERNAL://localhost:9093'
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: 'CLIENT'
     depends_on:
       - zookeeper
 
   zookeeper:
     container_name: zookeeper
-    image: 'bitnami/zookeeper:latest'
+    image: 'bitnami/zookeeper'
     ports:
       - '2181:2181'
     environment:
@@ -59,13 +116,13 @@ services:
 
   kafka-ui:
     container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
+    image: provectuslabs/kafka-ui
     ports:
       - '8101:8101'
     environment:
       SERVER_PORT: 8101
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_CLIENT_HOST}:${KAFKA_CLIENT_PORT}
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
     depends_on:
       - zookeeper
@@ -73,21 +130,21 @@ services:
 
   pact-broker:
     container_name: pact-broker
-    image: pactfoundation/pact-broker:2.101.0.1
+    image: pactfoundation/pact-broker:2.101.0.1 # runs on Alpine
     ports:
       - '9292:9292'
     environment:
       PACT_BROKER_PORT: '9292'
-      PACT_BROKER_DATABASE_URL: 'postgres://pact:pass@pact-broker.postgres/pact_broker'
+      PACT_BROKER_DATABASE_URL: 'postgres://${COMMON_POSTGRES_USERNAME}:${COMMON_POSTGRES_PASSWORD}@pact-broker.postgres/pact_broker'
       PACT_BROKER_LOG_LEVEL: DEBUG
       PACT_BROKER_SQL_LOG_LEVEL: DEBUG
     depends_on:
-      - pact-broker-postgres
+      - pact-broker.postgres
 
-  pact-broker-postgres:
+  pact-broker.postgres:
     container_name: pact-broker.postgres
-    image: postgres:14.4
+    image: postgres:14.4-alpine3.16
     environment:
       POSTGRES_DB: pact_broker
-      POSTGRES_USER: pact
-      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: ${COMMON_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${COMMON_POSTGRES_PASSWORD}

@@ -5,7 +5,7 @@ kafka.resource.topic.consumer.group.id: resource-processor
 
 spring:
   kafka:
-    bootstrap-servers: localhost:9093
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9093}
     consumer:
       group-id: resource-processor
       auto-offset-reset: earliest
@@ -13,3 +13,9 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 spring.json.use.type.headers: false
+
+mfp:
+  resource-service:
+    url: ${RESOURCE_SERVICE_URL:http://localhost:8081/}
+  song-service:
+    url: ${SONG_SERVICE_URL:http://localhost:8082/}

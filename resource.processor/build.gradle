@@ -92,3 +92,20 @@ tasks.named('check') {
 	dependsOn(testing.suites.testIntegration)
 	dependsOn(testing.suites.testContract)
 }
+
+bootJar {
+	archiveFileName = "${rootProject.name}.jar"
+}
+
+task dockerBuild {
+	group = 'build'
+	configure {
+		dependsOn(bootJar)
+	}
+	doLast {
+		exec {
+			executable "docker"
+			args "build", "--build-arg", "JAR_FILE=${bootJar.archiveFileName.get()}", "-t", "mfp2022/${rootProject.name}:${version}", "-t", "mfp2022/${rootProject.name}", "."
+		}
+	}
+}

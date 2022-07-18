@@ -17,8 +17,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-	runtimeOnly 'com.h2database:h2'
-	// runtimeOnly 'org.postgresql:postgresql'
+	runtimeOnly "org.postgresql:postgresql:${postgresVersion}"
 
 	compileOnly "org.projectlombok:lombok:${lombokVersion}"
 	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -40,6 +39,7 @@ testing {
 				implementation project
 				implementation 'org.springframework.boot:spring-boot-starter-test'
 				implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+				runtimeOnly 'com.h2database:h2'
 			}
 
 			targets {
@@ -59,6 +59,7 @@ testing {
 				implementation 'au.com.dius:pact-jvm-provider-junit5-spring:4.0.10'
 				implementation 'org.springframework.boot:spring-boot'
 				implementation 'org.springframework:spring-web:5.3.21'
+				runtimeOnly 'com.h2database:h2'
 			}
 			targets {
 				all {
@@ -84,6 +85,7 @@ testing {
 				implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 				implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
+				runtimeOnly 'com.h2database:h2'
 				compileOnly "org.projectlombok:lombok:${lombokVersion}"
 				// annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 			}
@@ -116,4 +118,21 @@ tasks.named('check') {
 	dependsOn(testing.suites.testIntegration)
 	dependsOn(testing.suites.testContract)
 	dependsOn(testing.suites.testComponent)
+}
+
+bootJar {
+	archiveFileName = "${rootProject.name}.jar"
+}
+
+task dockerBuild {
+	group = 'build'
+	configure {
+		dependsOn(bootJar)
+	}
+	doLast {
+		exec {
+			executable "docker"
+			args "build", "--build-arg", "JAR_FILE=${bootJar.archiveFileName.get()}", "-t", "mfp2022/${rootProject.name}:${version}", "-t", "mfp2022/${rootProject.name}", "."
+		}
+	}
 }
