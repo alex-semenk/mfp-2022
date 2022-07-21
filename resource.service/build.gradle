@@ -19,16 +19,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.kafka:spring-kafka'
 	// implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
-	implementation 'org.springframework.cloud:spring-cloud-aws-dependencies:1.1.0.RELEASE'
+	implementation 'org.springframework.cloud:spring-cloud-aws-dependencies:2.2.6.RELEASE'
 
 	implementation 'com.amazonaws:aws-java-sdk-s3'
-	implementation platform('com.amazonaws:aws-java-sdk-bom:1.11.228')
+	implementation platform('com.amazonaws:aws-java-sdk-bom:1.12.262')
 
 	compileOnly "org.projectlombok:lombok:${lombokVersion}"
 	annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
 	implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.2'
-	runtimeOnly 'com.h2database:h2'
+	runtimeOnly "org.postgresql:postgresql:${postgresVersion}"
 }
 
 testing {
@@ -73,6 +73,8 @@ testing {
 				implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
 				implementation 'org.springframework.kafka:spring-kafka'
 				implementation 'org.springframework.kafka:spring-kafka-test'
+
+				runtimeOnly 'com.h2database:h2'
 			}
 			targets {
 				all {
@@ -89,4 +91,21 @@ testing {
 tasks.named('check') {
 	dependsOn(testing.suites.testIntegration)
 	dependsOn(testing.suites.testContract)
+}
+
+bootJar {
+	archiveFileName = "${rootProject.name}.jar"
+}
+
+task dockerBuild {
+	group = 'build'
+	configure {
+		dependsOn(bootJar)
+	}
+	doLast {
+		exec {
+			executable "docker"
+			args "build", "--build-arg", "JAR_FILE=${bootJar.archiveFileName.get()}", "-t", "mfp2022/${rootProject.name}:${version}", "-t", "mfp2022/${rootProject.name}", "."
+		}
+	}
 }

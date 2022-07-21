@@ -1,6 +1,8 @@
 package com.mfp.resource.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
@@ -21,7 +23,7 @@ public class ResourceStorage {
     @Value("${resource.s3.bucket-name}")
     private String bucketName;
 
-    @Autowired()
+    @Autowired
     private AmazonS3 s3Client;
 
     @PostConstruct
